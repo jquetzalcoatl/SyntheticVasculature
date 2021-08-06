@@ -73,6 +73,8 @@ def vascular_growth_sim(fovea_radius = 0.2,lens_depth = 0.5,max_iter = 1000,init
     auxin_vein_dists = [geodesic_dist(pt_list[0],s) for s in sample_auxin]
     auxin_min_dists = [[0,d] for d in auxin_vein_dists ]
 
+    active_auxin = np.arange(len(init_sample))
+
     #print("sampled point dists are: \n");print(auxin_vein_dists)
     #print("sampled point dists are: \n");print(auxin_min_dists)
 
@@ -84,9 +86,13 @@ def vascular_growth_sim(fovea_radius = 0.2,lens_depth = 0.5,max_iter = 1000,init
         #manually find the nearest neighbor
         nns = [[] for pt in pt_list]
         #print("getting nearest neighbors for {} auxin".format(len(sample_auxin)))
-        for i in range(len(sample_auxin)):
+        #for i in range(len(sample_auxin)):
+        for i in active_auxin:
+            #if i in list_deleted_red:
+            #   continue
             #match the nearest neighbor of an auxin node to the index of said auxin node
             nns[int(auxin_min_dists[i][0])].append(i)
+            #
 
         #now compute the step vectors
         #print("the to grow indicators are {}".format(to_grow_indicator))
@@ -119,30 +125,48 @@ def vascular_growth_sim(fovea_radius = 0.2,lens_depth = 0.5,max_iter = 1000,init
                     branches[branch_membership[i][-1]].append(len(to_grow_indicator)-1)
 
                     #update distance array
-                    dists = np.array([geodesic_dist(vprime,s) for s in sample_auxin])
+                    #dists = np.array([geodesic_dist(vprime,s) for s in sample_auxin])
+                    dists = np.array([geodesic_dist(vprime,sample_auxin[j]) for j in active_auxin])
 
                     #print("distances to auxin for vprime are: {}".format(dists))
                     #set up auxin-vein node distance chart
-                    auxin_vein_dists = np.vstack([auxin_vein_dists,dists])
+                    #auxin_vein_dists = np.vstack([auxin_vein_dists,dists])
 
                     #update min distances
-                    for j in range(len(sample_auxin))[::-1]:
-                        if dists[j] < auxin_min_dists[j][1]:
+                    #for j in range(len(sample_auxin))[::-1]:
+                    temp_active_len = len(active_auxin)
+                    for idx, j in enumerate(active_auxin):
+                        if dists[idx] <= auxin_min_dists[j][1]:
                             #update the min distance array
                             #sample_auxin = np.delete(sample_auxin,j,0)
-                            auxin_min_dists[j][1] = dists[j]
+                            #print(f"idx: {idx}"); print(f"j: {j}")
+                            #active_auxin = np.delete(active_auxin,temp_active_len-idx-1,0)
+
+                            auxin_min_dists[j][1] = dists[idx]
                             auxin_min_dists[j][0] = len(to_grow_indicator)-1
 
         #prune auxin nodes
-        for j in range(len(sample_auxin))[::-1]:
+        #alternative: updated list_deleted_red
+        #for j in range(len(sample_auxin))[::-1]:
+        #for j in active_auxin[::-1]:
 
             #first check whether or not the new point got close enough to an auxin node
             #print(dists)
-            if auxin_min_dists[j][1] < death_dist:
+            #if auxin_min_dists[j][1] < death_dist:
+
+        temp_active_len = len(active_auxin)
+        for j in np.arange(temp_active_len)[::-1]:
+
+            #first check whether or not the new point got close enough to an auxin node
+            if auxin_min_dists[active_auxin[j]][1] < death_dist:
                 #delete auxin
-                sample_auxin = np.delete(sample_auxin,j,0)
-                auxin_vein_dists = np.delete(auxin_vein_dists,j,1)
-                auxin_min_dists = np.delete(auxin_min_dists,j,0)
+                #sample_auxin = np.delete(sample_auxin,j,0)
+                #active_auxin = np.delete(active_auxin,j,0)
+                active_auxin = np.delete(active_auxin,j)
+
+                #auxin_vein_dists = np.delete(auxin_vein_dists,j,1)
+                #auxin_min_dists = np.delete(auxin_min_dists,j,0)
+
                 #print("to grow indicator is: \n"); print(to_grow_indicator)
                 #print("new point dists are: \n");print(auxin_vein_dists)
                 #print("new point dists are: \n");print(auxin_min_dists)
