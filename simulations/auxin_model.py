@@ -50,7 +50,7 @@ def exp_map(pt, direction):
 
     return np.array([np.cos(dirnorm)*np.array(pt[0]) + np.sin(dirnorm)*np.array(direction[0])/dirnorm,pt[1]+direction[1] ],dtype=object)
 
-def vascular_growth_sim(fovea_radius = 0.2,lens_depth = 0.5,max_iter = 1000,init_num_pts = 200,inner_rad = 0.7,outer_rad = 1.2,D_step = 0.3,death_dist = None):
+def vascular_growth_sim(fovea_radius = 0.2,lens_depth = 0.5,max_iter = 1000,init_num_pts = 200,inner_rad = 0.7,outer_rad = 1.2,D_step = 0.9,death_dist = None):
 
     if death_dist is None:
         shell_vol = 4.*np.pi*0.5
@@ -80,7 +80,8 @@ def vascular_growth_sim(fovea_radius = 0.2,lens_depth = 0.5,max_iter = 1000,init
 
     count = 0
     #"while there are auxin nodes"
-    while((count < max_iter) and (len(sample_auxin)>0)):
+    #while((count < max_iter) and (len(sample_auxin)>0)):
+    while((count < max_iter) and (len(active_auxin)>0)):
         count += 1
 
         #manually find the nearest neighbor
@@ -172,6 +173,7 @@ def vascular_growth_sim(fovea_radius = 0.2,lens_depth = 0.5,max_iter = 1000,init
                 #print("new point dists are: \n");print(auxin_min_dists)
 
     #while there are auxin nodes left or max_counts has been exceeded
+    #print(f"active_auxin: {len(active_auxin)}"); print(f"count: {count}")
     return np.array(pt_list), branches, branch_membership, init_sample
 
 def convert_from_product(pt_list):

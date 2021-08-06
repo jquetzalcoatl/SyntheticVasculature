@@ -49,10 +49,10 @@ class Vasculature:
 
         return
 
-    def run_simulation(self):
+    def run_simulation(self,step_size = 0.9):
         if self.model_type == "auxin":
             #run simulation
-            result = am.vascular_growth_sim(init_num_pts = self.init_num_pts)
+            result = am.vascular_growth_sim(init_num_pts = self.init_num_pts,D_step = step_size)
 
             #convert back to Euclidean coords
             self.coords = am.convert_from_product(result[0])/1.2

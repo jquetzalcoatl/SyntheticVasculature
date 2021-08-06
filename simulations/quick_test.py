@@ -17,18 +17,52 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #run the simulation
-test_sim = mr.Vasculature("auxin", 200, "/Users/wham/Documents/vessel_sims/")
 
-time1 = time.time()
-test_sim.run_simulation()
-time2 = time.time()
-print(f"Time to run sim was: {time2-time1}")
+for step in [0.9]:
+
+    test_sim = mr.Vasculature("auxin", 400, "/Users/wham/Documents/vessel_sims/")
+
+    time1 = time.time()
+    test_sim.run_simulation(step_size = step)
+    time2 = time.time()
+    print(f"Time to run sim was: {time2-time1}")
+
+    test_sim.generate_radii(0.001)
+
+    if len(test_sim.radii) == len(test_sim.coords):
+        #adapt vertex-based radii to edge-based radii
+        edge_radii = np.array([np.mean(test_sim.radii[list(e)]) for e in test_sim.edges])
+    else:
+        edge_radii = test_sim.radii
+
+    #test surface 2
+    time1 = time.time()
+
+    poly = pv.PolyData()
+    poly.points = test_sim.coords
+
+    cells = np.full((len(test_sim.edges), 3), 2, dtype=np.int_)
+
+    cells[:, 1] =  test_sim.edges[:,0]
+    cells[:, 2] = test_sim.edges[:,1]
+    poly.lines = cells
+
+    #poly["scalars"] = np.arange(poly.n_points)
+    poly["radii"] = test_sim.radii
+
+    tube = poly.tube(radius = np.min(test_sim.radii),scalars = "radii",capping = False)
+    #tube = tube.smooth(n_iter = 1000)
+
+    time2 = time.time()
+    print(f"Time to revoxelize was: {time2-time1}")
+
+    tube.plot(color = "red")
 
 
 """
 plotting
 """
-
+"""
 test_sim.generate_radii(0.001)
 
 if len(test_sim.radii) == len(test_sim.coords):
@@ -85,3 +119,4 @@ print(f"time to clip was: {time2-time1}")
 #set up camera
 #pl.savefig()
 pl.show(cpos=cpos)
+"""
