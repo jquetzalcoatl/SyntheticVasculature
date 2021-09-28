@@ -1,4 +1,5 @@
-using Random, Colors, Statistics, DelimitedFiles, Arpack, Distributions, Images, CSV, LinearAlgebra, SparseArrays, PlotlyJS, ImageFiltering
+# using Random, Colors, Statistics, DelimitedFiles, Arpack, Distributions, Images, CSV, LinearAlgebra, SparseArrays, PlotlyJS, ImageFiltering
+using DelimitedFiles, Images
 
 function maxPooling(a)
   AConv=fill(0.0,(Int(size(a,1)),Int(size(a,2))))
@@ -22,34 +23,59 @@ function poolIt(a)
 end
 
 function readAndDir(readDir, writeDir)
-  list=readdir("./" * string(readDir) * "/")
-  if (isdir(string(writeDir))) == false
-     mkdir(string(writeDir))
+  list=readdir(readDir)
+  if isdir(writeDir) == false
+     mkdir(writeDir)
    end
    return list
 end
 
-function main(readDir, writeDir)
-    println("Read from = " * string(readDir))
-    println("Write to = " * string(writeDir))
+function convertToBW(img)
+    bitAr = length(size(img)) == 3 ? (sum(img, dims=1) .> 0.0)[1,:,:] : img .> 0.0
+    return bitAr
+end
+
+function skeletonize(readDir, writeDir)
+    @info "Read from $readDir "
+    @info "Write to $writeDir"
     list = readAndDir(readDir, writeDir)
 
-    for i=7:size(list,1)
-        l="./" * string(readDir) * "/" * list[i]
-        println("arc = "*string(l))
-        aa=channelview((load(l)))
-        a=poolIt(aa[1,:,:])
+    for i=1:size(list,1)
+        @info i
+        l=readDir * list[i]
+        @info "Loading $l"
+        img = channelview((load(l)))
+        img=convertToBW(img)
+        @info "Pooling $l"
+        # a=poolIt(aa[1,:,:])
+        a=poolIt(img)
         save(l, a)
+        @info "Skeletonizing $l"
         run(`python3 sket.py $l`)
         println(l)
-        newl=l[8:length(l)-4]*"_Sket.tif"
+        newl=list[i][1:end-4]*"_Sket.tif"
         run(`mv $newl $writeDir `)
         run(`cp $l $writeDir `)
+        @warn "$writeDir"
     end
 end
 
 
+cd("/Users/javier/Desktop/SyntheticVasculature/extractNetwork")
+PATH_IN = "/Users/javier/Desktop/SyntheticVasculature/Data/DRIVE/"
+PATH_IN = "/Users/javier/Desktop/SyntheticVasculature/Data/HRF_AV_GT/"
+PATH_OUT = "/Users/javier/Desktop/SyntheticVasculature/Data/sket/"
 
-main("toSK", "sket")
+skeletonize(PATH_IN, PATH_OUT)
 
-`python3 `
+# readAndDir(PATH_IN, PATH_OUT)
+
+
+# files = readdir(PATH_IN)
+# for file in files
+#     if split(file,".")[2] != "gif"
+#         img  = load(PATH_IN * "/" * file)
+#         save(PATH_IN * "/" * file[1:end-3] * "gif", img )
+#         rm(PATH_IN * "/" * file)
+#     end
+# end

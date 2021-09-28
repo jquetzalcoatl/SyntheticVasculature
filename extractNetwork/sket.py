@@ -17,7 +17,7 @@ filename = args.square
 #     width, height = image.size
 
 image=Image.open(filename)
- # image.show()
+# image.show()
 
 data = np.asarray( image, dtype="int32" )
 
@@ -29,7 +29,7 @@ data = np.asarray( image, dtype="int32" )
 skeleton = skeletonize(data)
 
 im = Image.fromarray(skeleton)
-im.save(filename[-14:-4]+"_Sket.tif")
+im.save(filename.split("/")[-1][:-4]+"_Sket.tif")
 
 # display results
 # fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(8, 4),

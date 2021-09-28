@@ -35,7 +35,7 @@ begin
     elseif r==0
       return false
     else
-      println("Your code is doing some nasty things...")
+      @warn "Your code is doing some nasty things... Burn it and throw it in a river!!"
       return true
     end
   end
@@ -110,7 +110,7 @@ begin
     return newA, nod[2:size(nod)[1],:], adjMat, ep[2:size(ep,1),:], numberOfSegPerNode[2:size(numberOfSegPerNode)[1]]
   end
 
-  function algSearch(a, nod, index, newNode, ASeg)
+  function algSearch(a, nod, index, newNode, ASeg; tMAX=3000)
     initialX, initialY=nod[newNode,1], nod[newNode,2]
     oldvalues=[initialX initialY]
     initialnod=[nod[newNode,1] nod[newNode,2]]
@@ -122,7 +122,7 @@ begin
     for ind=1:index
       diamArray=[0]
 
-      for tim=1:2000
+      for tim=1:tMAX
           if tim>1
               newx, newy, qq = secondNeiIsNode(nod, initialX, initialY, oldvalues[1], oldvalues[2],initialnod)
               if qq
@@ -161,8 +161,8 @@ begin
                 break
             end
           end
-          if tim==2000
-           println("REACHED THE MAXIMUM tim!! "* string(ind) * " " * string(newNode) * "EXTREME CARE!!!" )
+          if tim==tMAX
+           @warn "Reach tMax= $(tMAX)!! $(ind) at node $(newNode)"
            initialX=initialnod[1]
            initialY=initialnod[2]
            traj=vcat(traj,[0 0])
@@ -366,7 +366,7 @@ begin
 
   function measureDiam(aSeg, xold, yold, x, y)
     dr=[0 -1; 1 0]*[x-xold;y-yold]
-    dmax=300
+    dmax=minimum(size(aSeg))
     d=0
     for i=1:dmax
       if aSeg[xold+dr[1]*i, yold+dr[2]*i]==0
@@ -374,7 +374,7 @@ begin
         break
       end
       if i==dmax
-        println("something is wrong when calculating the diameter")
+        @warn "Something is wrong when calculating the diameter. You're getting a diameter larger than the image"
       end
     end
     for i=1:dmax
@@ -383,7 +383,7 @@ begin
         break
       end
       if i==dmax
-        println("something is wrong when calculating the diameter")
+        @warn "something is wrong when calculating the diameter. You're getting a diameter larger than the image"
       end
     end
 
@@ -450,18 +450,18 @@ begin
   end
   ############################################DATA MANIPULATION
   function overImposedPic(a,nodes, ep)
-    Aep=zeros(size(a,1),size(a,2))
-    Anod=zeros(size(a,1),size(a,2))
+    Aep=zeros(size(a,1)+4,size(a,2)+4)
+    Anod=zeros(size(a,1)+4,size(a,2)+4)
 
     for i=1:size(ep,1)
-      Aep[ep[i,1]-2:ep[i,1]+2, ep[i,2]-2:ep[i,2]+2] .=1
+      Aep[ep[i,1]-2+2:ep[i,1]+2+2, ep[i,2]-2+2:ep[i,2]+2+2] .=1
     end
 
     for i=1:size(nodes,1)
-      Anod[nodes[i,1]-2:nodes[i,1]+2, nodes[i,2]-2:nodes[i,2]+2] .=1
+      Anod[nodes[i,1]-2+2:nodes[i,1]+2+2, nodes[i,2]-2+2:nodes[i,2]+2+2] .=1
     end
 
-    return colorview(RGB, a, Anod, Aep)
+    return colorview(RGB, a, Anod[3:end-2,3:end-2], Aep[3:end-2,3:end-2])
   end
 
   function readAndDir(arg2, arg)
@@ -474,7 +474,7 @@ begin
 
   function saveFig(pathh, fig)
     pathname= string(pathh)
-    @show fig, pathname
+    @info fig, pathname
     savefig(fig,pathname)
   end
 
@@ -486,7 +486,7 @@ end
 ######################################################
 
 
-function mymainFunc(thepath, readDir, writeDir)
+function walkTheWalk(thepath, readDir, writeDir)
   println("./"* string(readDir) * "/" * string(thepath) * "_Sket.tif")
     A=addZeros(init2("./"* string(readDir) * "/" * string(thepath) * "_Sket.tif"))
     ASeg=addZeros(init2("./"* string(readDir) * "/" * string(thepath) * ".gif"))
@@ -522,113 +522,60 @@ function mymainFunc(thepath, readDir, writeDir)
       end
     end
     loc2=loc2[2:size(loc2)[1],:]
-    # d=[scatter(x=nodes[:,1],y=nodes[:,2], marker_symbol="square", mode="markers")]
-    # append!(d,[scatter(x=loc2[:,1],y=-loc2[:,2].+584, marker_symbol="square", mode="markers", marker_size=3,marker_color="red")])
-    # for i=1:size(nodes)[1], j=1:size(nodes)[1]
-    #   if adjMat[j,i]==1
-    #     append!(d,[scatter(x=[nodes[j,2],nodes[i,2]],y=[584-nodes[j,1],584-nodes[i,1]], mode="line", marker_color="blue")])
-    #   end
-    # end
-    # popfirst!(d)
 
-    d = scatter(loc2[:,1],-loc2[:,2].+584, markershapes = :square, markerstrokewidth=0, frame=:box, size=(500,500), legend=false)
+    d = scatter(loc2[:,1],-loc2[:,2].+size(A,1), markershapes = :square, markerstrokewidth=0, frame=:box, size=(500,500), legend=false)
     for i=1:size(nodes)[1], j=1:size(nodes)[1]
       if adjMat[j,i]==1
-        # append!(d,[scatter(x=[nodes[j,2],nodes[i,2]],y=[584-nodes[j,1],584-nodes[i,1]], mode="line", marker_color="blue")])
-        d = plot!([nodes[j,2],nodes[i,2]],[584-nodes[j,1],584-nodes[i,1]],
+        d = plot!([nodes[j,2],nodes[i,2]],[size(A,1)-nodes[j,1],size(A,1)-nodes[i,1]],
               markershapes = :circle, lw=2, ms=5, legend=:none, c=:black, markerstrokewidth=0)
       end
     end
     fig=plot(d)
-    saveFig(writeDir * "/" * thepath[1:10]*"_network.png", fig)
-    save(writeDir * "/" * thepath[1:10]*"_Pic.png",overImposedPic(A,nodes, endpoints))
+    saveFig(writeDir * "/" * thepath*"_network.png", fig)
+    save(writeDir * "/" * thepath*"_Pic.png",overImposedPic(A,nodes, endpoints))
     # writedlm(thepath[1:10]*"_adj.csv",Array{Int,2}(adjMat))
     # writedlm(thepath[1:10]*"_nodes.csv",hcat(nodes,[10.0 for i=1:size(nodes,1)]))
     # writedlm(thepath[1:10]*"_endpoints.csv",Array{Int,1}(positionEndpoints))
-    saveData(writeDir * "/" * thepath[1:10]*"_adj.csv",Array{Int,2}(adjMat))
-    saveData(writeDir * "/" * thepath[1:10]*"_adjD.csv",Array{Float16,2}(f.(adjMatD)))
-    saveData(writeDir * "/" * thepath[1:10]*"_nodes.csv",hcat(nodes,[10.0 for i=1:size(nodes,1)]))
-    saveData(writeDir * "/" * thepath[1:10]*"_endpoints.csv",Array{Int,1}(positionEndpoints))
+    saveData(writeDir * "/" * thepath*"_adj.csv",Array{Int,2}(adjMat))
+    saveData(writeDir * "/" * thepath*"_adjD.csv",Array{Float16,2}(f.(adjMatD)))
+    saveData(writeDir * "/" * thepath*"_nodes.csv",hcat(nodes,[10.0 for i=1:size(nodes,1)]))
+    saveData(writeDir * "/" * thepath*"_endpoints.csv",Array{Int,1}(positionEndpoints))
     return d, adjMat, positionEndpoints, nodes, adjMatD, endpoints
 end
 
 
 function theWholeProcess(readDir,writeDir)
   list, outDir=readAndDir( readDir, writeDir)
-  list=setdiff([list[i][1:10] for i=1:size(list,1)])
+  # list=setdiff([list[i][1:10] for i=1:size(list,1)])
+  list = setdiff([size(split(list[i],"_Sket"),1) == 2 ? split(list[i],"_Sket")[1] : split(list[i],".")[1] for i in 1:size(list,1)])
 
   for i in list
-    d, adjMat, endpoints, nodes, adjMatD, ep=mymainFunc(i, readDir,writeDir)
+    d, adjMat, endpoints, nodes, adjMatD, ep=walkTheWalk(i, readDir,writeDir)
 
   end
   return 1
 
 end
 
-plot([0,1],[2,6],
-      markershapes = :circle, lw=2, ms=8, legend=:none, c=:red, markerstrokewidth=0)
-pwd()
+
+
 ###########################################################
 ######################################################
 #######################################################
 #######################################################
 ######################################################
 #######################################################
-thepath="./sket/01_manual1_Sket.tif"
+cd("/Users/javier/Desktop/SyntheticVasculature/Data")
+
+
 thepath="01_manual1"
-#diamMat=zeros(10,10)
-#diamStat=[0]
-#trajTest=[0 0]
-cd("/Users/javier/Documents/Retinopathy/DRIVE/MySeg")
-# cd("../Retinopathy/DRIVE/MySeg/") #Change path to where
-                      #this script, the sket dir and the network dir is
-@time d, adjMat, endpoints, nodes, adjMatD, ep=mymainFunc(thepath, "sket", "networks")
-plot(d)
-@time d=mymainFunc(thepath, "sket", "networks")
+thepath = "01_dr_AVmanual"
+
+
+
+@time d, adjMat, endpoints, nodes, adjMatD, ep=walkTheWalk(thepath, "sket", "networks")
+
+
 # This function will go over all the skeletonized segmented .tif images
 # and compute the Adj Matrix, end points
 theWholeProcess("sket", "networks")
-
-#=INFO
-d is a plot of the computed network overimposed on the original skeletonized image
-
-adjMat = adjacency matrix, i.e. adjMat[i,j] = 1 if node i and node j are connected
-
-endpoints is a list of the positions in nodes that are connected to only 1 node
-
-nodes = positions of the nodes
-
-adjMatD = adjacency matrix where adjMat[i,j] = diameter if node i and node
-j are connected, otherwise gives 0
-
-ep is an array of the positions of the endpoints. endpoints[i] is located at
-(ep[i,1],ep[i,1])
-=#
-
-
-
-
-################################################
-# Aseg=zeros(size(addZeros(init2("01_manual1_SketA.tif")),1),size(addZeros(init2("01_manual1_SketA.tif")),2))
-# A=addZeros(init2("01_manual1_SketA.tif"))
-#
-# colorview(RGB,addZeros(init2("01_manual1.gif")),Apath,Aseg)
-# colorview(RGB,addZeros(init2("01_manual1_SketA.tif")),zeroarray,diamMat)
-# colorview(RGB,addZeros(init2("01_manual1.gif")),Aseg,diamMat)
-# colorview(RGB,Aseg,Apath,diamMat)
-# colorview(RGB,addZeros(init2("01_manual1.gif")),Apath,diamMat)
-# colorview(Gray,Apath)
-#
-# for i=1:size(ep,1)
-#   # println(nodes[i, :])
-#   Aseg[ep[i,1]-2:ep[i,1]+2, ep[i,2]-2:ep[i,2]+2] .=1
-# end
-#
-# Apath=zeros(size(addZeros(init2("01_manual1_SketA.tif")),1),size(addZeros(init2("01_manual1_SketA.tif")),2))
-# for i=1:size(nodes,1)
-#   # println(nodes[i, :])
-#   # if trajTest[i,:]!=[0, 0]
-#   #   Apath[trajTest[i,1]:trajTest[i,1], trajTest[i,2]:trajTest[i,2]] .=1
-#   # end
-#   Apath[nodes[i,1]-2:nodes[i,1]+2, nodes[i,2]-2:nodes[i,2]+2] .=1
-# end
