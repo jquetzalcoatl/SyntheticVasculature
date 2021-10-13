@@ -205,6 +205,16 @@ class Vasculature:
 
         return
 
+    def save_all_csv(self,save_name = ""):
+        #get and save coords
+
+        #get and save adj
+
+        #get and save adjD
+
+        #get and save leaves
+        return
+
 def dist_to_line(pt, line_pt1, line_pt2):
     """
     returns the distance of a point pt to the line spanned by line_pt1 and line_pt2

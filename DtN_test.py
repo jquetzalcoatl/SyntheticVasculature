@@ -6,6 +6,7 @@ import numpy as np
 import DtN_tools as DtN
 
 import matplotlib.pyplot as plt
+from matplotlib import cm
 
 
 #read in test network
@@ -36,7 +37,7 @@ leaves = np.arange(len(adj))[degrees == 1]
 
 #identify source node
 degreesD = np.array([sum(adjD[i]) for i in range(len(adjD))])
-sourceNode = np.argsort(degreesD)[-4]
+sourceNode = np.argsort(degreesD)[-1]
 
 #all boundary nodes
 bdyNodes = np.hstack([leaves,sourceNode])
@@ -52,16 +53,29 @@ edgeIdx = np.nonzero(adj)
 edge_list = [(edgeIdx[0][i],edgeIdx[1][i]) for i in range(len(edgeIdx[0]))]
 
 for e in edge_list:
-    plt.plot(coords[e,0],coords[e,1],c="k")
+    plt.plot(coords[e,1],coords[e,0],c="k")
 
 for l in leaves:
-    plt.scatter(coords[l,0],coords[l,1],c="b")
+    plt.scatter(coords[l,1],coords[l,0],c="b")
 
-plt.scatter(coords[sourceNode,0],coords[sourceNode,1],c="r")
+plt.scatter(coords[sourceNode,1],coords[sourceNode,0],c="r")
 
 plt.show()
 
 #get eigenvector, compute harmonic extension
-schurComp = DtN.schurComp()
+modifiedLaplacian = np.copy(L)
+u = steklov_spec[1][2]
+
+for l,idx in enumerate(bdyNodes):
+    #modifiedLaplacian[:,idx] = 0.
+    modifiedLaplacian[idx,:] = 0.
+    modifiedLaplacian[idx,idx] = 1.
+
+b = np.zeros(len(modifiedLaplacian))
+b[bdyNodes] = u
+
+Hu = np.linalg.solve(modifiedLaplacian,b)
+plt.plot(Hu); plt.show()
+
 
 #compute flow from source to leaves
