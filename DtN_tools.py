@@ -14,15 +14,19 @@ def schur_comp(M,idx_set):
     D = M[np.ix_(comp_idx,comp_idx)]
 
 
-    return A - B @ np.linalg.inv(D) @ C
+    return A - B @ np.linalg.inv(D) @ C, [A,B,C,D]
 
 def steklov_spec(M,bdy_idx):
     """
     computes the steklov spectrum corresponding to a Laplacian M and boundary nodes bdy_idx
     """
 
-    eigvals, eigvecs = np.linalg.eig(schur_comp(M,bdy_idx))
+    eigvals, eigvecs = np.linalg.eig(schur_comp(M,bdy_idx)[0])
 
     eigval_sort = np.argsort(eigvals)
 
     return eigvals[eigval_sort], eigvecs.T[eigval_sort]
+
+def harmonic_extension(schur,u):
+    Hu = np.linalg.solve(schur[3],-schur[2]@u)
+    return Hu
