@@ -3,7 +3,7 @@ main class for running and saving models
 """
 
 import numpy as np
-import auxin_model as am
+import simulations.auxin_model as am
 #import voxelizer as vx
 
 import pyvista as pv
@@ -49,10 +49,10 @@ class Vasculature:
 
         return
 
-    def run_simulation(self,step_size = 0.9):
+    def run_simulation(self,step_size = 0.9,fovea_radius = 0.2):
         if self.model_type == "auxin":
             #run simulation
-            result = am.vascular_growth_sim(init_num_pts = self.init_num_pts,D_step = step_size)
+            result = am.vascular_growth_sim(fovea_radius = fovea_radius, init_num_pts = self.init_num_pts,D_step = step_size)
 
             #convert back to Euclidean coords
             self.coords = am.convert_from_product(result[0])/1.2
