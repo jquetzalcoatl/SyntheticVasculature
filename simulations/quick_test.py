@@ -63,6 +63,7 @@ for e in test_sim.edges:
     plt.plot(test_sim.coords[e,0],test_sim.coords[e,1])
 plt.show()
 
+
 """
 plotting
 """
