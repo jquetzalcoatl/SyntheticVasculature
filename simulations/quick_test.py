@@ -6,7 +6,7 @@ python quick_test.py
 to run the sim and viz output.
 """
 
-import model_runner as mr
+import simulations.model_runner as mr
 
 import pyvista as pv
 
@@ -58,6 +58,10 @@ for step in [0.9]:
 
     tube.plot(color = "red")
 
+
+for e in test_sim.edges:
+    plt.plot(test_sim.coords[e,0],test_sim.coords[e,1])
+plt.show()
 
 """
 plotting
