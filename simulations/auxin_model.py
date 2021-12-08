@@ -3,6 +3,9 @@ auxin-based model code
 """
 import numpy as np
 
+g_fovea_pos = [0.0, 0.0, -1.0]
+g_od_pos = [0.5, 0.0, -0.5*np.sqrt(3)]
+
 def sphere_init_config(fovea_radius = 0.3,lens_depth = 0.3,num_pts = 100,inner_rad = 0.8,outer_rad = 1.2,prune_into_eye = True):
 
     sample = []
@@ -13,7 +16,9 @@ def sphere_init_config(fovea_radius = 0.3,lens_depth = 0.3,num_pts = 100,inner_r
         sample_pt = [pt,pt_rad]
 
         if prune_into_eye:
-            if ((pt*pt_rad)[-1] <= 1-lens_depth) and (np.linalg.norm(pt*pt_rad - np.array([0.,0.,-1.])) >= fovea_radius):
+            if ((pt*pt_rad)[-1] <= 1-lens_depth) \
+                    and (np.linalg.norm(pt*pt_rad - np.array(g_fovea_pos)) \
+                    >= fovea_radius):
                 sample.append(sample_pt)
 
     return np.array(sample,dtype=object)
@@ -58,7 +63,7 @@ def vascular_growth_sim(fovea_radius = 0.2,lens_depth = 0.5,max_iter = 1000,init
         death_dist = approx_cover_rad
 
     #set up data structure
-    pt_list = [[[0.5,0.,-0.5*np.sqrt(3)],outer_rad]]
+    pt_list = [[g_od_pos, outer_rad]]
     to_grow_indicator = np.array([1])
     branches = [[0]]
     branch_membership = [[0]]
@@ -112,7 +117,8 @@ def vascular_growth_sim(fovea_radius = 0.2,lens_depth = 0.5,max_iter = 1000,init
                 vprime = exp_map(pt_list[i], [D_step*step_vec[0],D_step*step_vec[1]])
 
                 #if the new point is far enough away from the fovea:
-                if np.linalg.norm(vprime[1]*vprime[0] - np.array([0.,0.,-1.])) > fovea_radius:
+                if np.linalg.norm(vprime[1]*vprime[0] - np.array(g_fovea_pos))\
+                        > fovea_radius:
                     #print("growing from {} to {}".format(pt_list[i],vprime))
                     #add the new point to the list of points
                     pt_list = np.vstack([pt_list,vprime])

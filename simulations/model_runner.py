@@ -3,6 +3,7 @@ main class for running and saving models
 """
 
 import numpy as np
+import os
 import simulations.auxin_model as am
 #import voxelizer as vx
 
@@ -12,6 +13,11 @@ import scipy.spatial as spsp
 
 from mayavi import mlab
 import matplotlib.pyplot as plt
+
+pe = os.path.exists
+pj = os.path.join
+HOME = os.path.expanduser("~")
+
 
 class Vasculature:
 
@@ -49,6 +55,12 @@ class Vasculature:
 
         return
 
+    def set_geometry(self, od=None, fovea=None):
+        if od is not None:
+            am.g_od_pos = od
+        if fovea is not None:
+            am.g_fovea_pos = fovea
+
     def run_simulation(self,step_size = 0.9,fovea_radius = 0.2):
         if self.model_type == "auxin":
             #run simulation
@@ -72,6 +84,7 @@ class Vasculature:
             self.edge_lookup = {tuple(np.sort(e)):i for i,e in enumerate(self.edges)}
 
             self.radii = am.get_vein_radii(self.d_nbrs,self.A,init_radii = self.init_radii,branch_power = 3)
+#            import pdb; pdb.set_trace()
 
         return
 
@@ -115,6 +128,7 @@ class Vasculature:
             src.mlab_source.dataset.lines = proj_e
             lines = mlab.pipeline.stripper(src)
 
+#            import pdb; pdb.set_trace()
             if save:
                 mlab.savefig(f"{self.save_dir}plots/{save_name}_exact-vein_radius-{self.init_radii:.3f}.png", size = (300,300))
                 mlab.close("all")
@@ -165,15 +179,15 @@ class Vasculature:
 
     def save_simulation(self,save_name = ""):
 
-        np.save(f"{self.save_dir}plots/{save_name}_edges",self.edges)
-        np.save(f"{self.save_dir}plots/{save_name}_coords",self.coords)
+        np.save( pj(self.save_dir, f"plots/{save_name}_edges") ,self.edges )
+        np.save( pj(self.save_dir, f"plots/{save_name}_coords") ,self.coords )
 
         return
 
     def load_simulation(self,save_name = "",model_type = "auxin"):
 
-        self.edges = np.load(f"{self.save_dir}plots/{save_name}_edges")
-        self.coords = np.load(f"{self.save_dir}plots/{save_name}_coords")
+        self.edges = np.load( pj(self.save_dir, f"plots/{save_name}_edges") )
+        self.coords = np.load( pj(self.save_dir, f"plots/{save_name}_coords") )
         self.init_num_pts = len(self.coords)
         self.model_type = model_type
 

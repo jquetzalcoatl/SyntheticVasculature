@@ -6,6 +6,9 @@ python quick_test.py
 to run the sim and viz output.
 """
 
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import simulations.model_runner as mr
 
 import pyvista as pv
