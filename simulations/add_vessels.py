@@ -55,7 +55,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-b", "--blank", type=str,
             default=pj(HOME,
-                "Datasets/Retina/DRIVE/training/blanks/21_blank.png"))
+                "Datasets/Retina/DRIVE/training/blanks/31_blank.png"))
     parser.add_argument("-v", "--vessels-dir", type=str,
             default=pj(HOME, "Output/retina/plots"))
     cfg = vars( parser.parse_args() )

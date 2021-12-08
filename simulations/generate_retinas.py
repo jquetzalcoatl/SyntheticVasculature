@@ -23,7 +23,7 @@ def create_pos3d(pos2d):
     :pos2d: (wd, ht) in (0,1) image coordinates, with origin in upper left
     """
     x,y = pos2d
-    x,y = 2.0*(x-0.5), 2.0*(0.5-y)
+    x,y = 2.0*(x-0.5), 2.0*(y-0.5) 
     z = np.sqrt( 1 - (x*x + y*y) )
     pos3d = (x, y, -z) # Project to lower hemisphere
     return pos3d
@@ -32,8 +32,8 @@ def main(cfg):
     output_dir = os.path.abspath( cfg["output_dir"] )
     synet = MR.Vasculature("auxin", 500, output_dir+os.sep)
 
-    fovea_pos2d = (0.5, 0.5)
-    od_pos2d = (0.1, 0.4)
+    fovea_pos2d = (0.0, 0.5)
+    od_pos2d = (0.75, 0.4)
 
     fovea_pos = create_pos3d(fovea_pos2d)
     od_pos = create_pos3d(od_pos2d)
