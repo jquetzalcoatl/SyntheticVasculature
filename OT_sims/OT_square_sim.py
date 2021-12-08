@@ -121,6 +121,12 @@ for t in np.arange(0,31,5):
 	mlab.show()
 """
 
+muTotal = sum([mu[i]/(mu[i]@areaVertices) for i in range(nTime)])
+muTotal[muTotal<1e-10] = 0.
+
+mlab.triangular_mesh(Vertices[:,0], Vertices[:,1], Vertices[:,2], Triangles, scalars=(muTotal>np.mean(muTotal)).astype("float"), colormap = "jet", transparent = True)
+mlab.show()
+
 muTotal = np.zeros(len(mu[0]))
 
 for i in range(nTime):
