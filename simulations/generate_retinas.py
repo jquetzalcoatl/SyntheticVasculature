@@ -18,12 +18,25 @@ pj = os.path.join
 HOME = os.path.expanduser("~")
 
 
+def create_pos3d(pos2d):
+    """
+    :pos2d: (wd, ht) in (0,1) image coordinates, with origin in upper left
+    """
+    x,y = pos2d
+    x,y = 2.0*(x-0.5), 2.0*(0.5-y)
+    z = np.sqrt( 1 - (x*x + y*y) )
+    pos3d = (x, y, -z) # Project to lower hemisphere
+    return pos3d
+
 def main(cfg):
     output_dir = os.path.abspath( cfg["output_dir"] )
     synet = MR.Vasculature("auxin", 500, output_dir+os.sep)
 
-    fovea_pos = [-0.5, 0.0, -0.5*np.sqrt(3)]
-    od_pos = [0.0, 0.5, -0.5*np.sqrt(3)]
+    fovea_pos2d = (0.5, 0.5)
+    od_pos2d = (0.1, 0.4)
+
+    fovea_pos = create_pos3d(fovea_pos2d)
+    od_pos = create_pos3d(od_pos2d)
     synet.set_geometry(od=od_pos, fovea=fovea_pos)
     time1 = time.time()
     synet.run_simulation(step_size = 0.5, fovea_radius = 0.3)
@@ -35,6 +48,7 @@ def main(cfg):
     synet.generate_fundus_image(im_type="exact", save=True,
             save_name=save_name)
     synet.save_radii(save_name=save_name)
+    synet.save_simulation(save_name=save_name)
 
     import pdb; pdb.set_trace()
 
