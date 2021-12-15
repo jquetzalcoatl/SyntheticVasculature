@@ -61,10 +61,10 @@ class Vasculature:
         if fovea is not None:
             am.g_fovea_pos = fovea
 
-    def run_simulation(self,step_size = 0.9,fovea_radius = 0.2):
+    def run_simulation(self,step_size = 0.9,fovea_radius = 0.2,init_vasc = None,bounding_box=None):
         if self.model_type == "auxin":
             #run simulation
-            result = am.vascular_growth_sim(fovea_radius = fovea_radius, init_num_pts = self.init_num_pts,D_step = step_size)
+            result = am.vascular_growth_sim(fovea_radius = fovea_radius, init_num_pts = self.init_num_pts,D_step = step_size,init_vasc = init_vasc,bounding_box=bounding_box)
 
             #convert back to Euclidean coords
             self.coords = am.convert_from_product(result[0])/1.2

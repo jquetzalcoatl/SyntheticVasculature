@@ -55,18 +55,32 @@ def exp_map(pt, direction):
 
     return np.array([np.cos(dirnorm)*np.array(pt[0]) + np.sin(dirnorm)*np.array(direction[0])/dirnorm,pt[1]+direction[1] ],dtype=object)
 
-def vascular_growth_sim(fovea_radius = 0.2,lens_depth = 0.5,max_iter = 1000,init_num_pts = 200,inner_rad = 0.7,outer_rad = 1.2,D_step = 0.9,death_dist = None):
-
+def vascular_growth_sim(fovea_radius = 0.2,lens_depth = 0.5,max_iter = 1000,init_num_pts = 200,inner_rad = 0.7,outer_rad = 1.2,D_step = 0.9,death_dist = None,init_vasc = None,bounding_box=None):
+    """
+    if init_vasc is None, then initialize pt_list and vascular structure
+    otherwise, init_vasc = (pt_list )
+    """
     if death_dist is None:
         shell_vol = 4.*np.pi*0.5
         approx_cover_rad = 0.1*np.sqrt((shell_vol/init_num_pts)*(3./4.)/np.pi)
         death_dist = approx_cover_rad
 
     #set up data structure
-    pt_list = [[g_od_pos, outer_rad]]
-    to_grow_indicator = np.array([1])
-    branches = [[0]]
-    branch_membership = [[0]]
+    if init_vasc is None:
+        pt_list = [[g_od_pos, outer_rad]]
+        to_grow_indicator = np.array([1])
+        branches = [[0]]
+        branch_membership = [[0]]
+    else:
+        pt_list = list(init_vasc[0])
+        branches = init_vasc[1]
+        branch_membership = init_vasc[2]
+
+        #construct the indicator for whether a point is at the end of a branch
+        # by looping through branches 
+        to_grow_indicator = np.zeros(len(pt_list))
+        for b in branches:
+            to_grow_indicator[b[-1]] = 1.
 
     #sample auxin
     sample_auxin = sphere_init_config(fovea_radius = fovea_radius,lens_depth = lens_depth,num_pts = init_num_pts,inner_rad = inner_rad,outer_rad = outer_rad)
