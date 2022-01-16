@@ -6,7 +6,7 @@ import numpy as np
 g_fovea_pos = [0.0, 0.0, -1.0]
 g_od_pos = [0.5, 0.0, -0.5*np.sqrt(3)]
 
-def sphere_init_config(fovea_radius = 0.3,lens_depth = 0.3,num_pts = 100,inner_rad = 0.8,outer_rad = 1.2,prune_into_eye = True):
+def sphere_init_config(fovea_radius = 0.3,lens_depth = 0.3,num_pts = 100,inner_rad = 0.8,outer_rad = 1.2,prune_into_eye = True,bounding_box = None):
 
     sample = []
     while(len(sample) < num_pts):
@@ -15,11 +15,18 @@ def sphere_init_config(fovea_radius = 0.3,lens_depth = 0.3,num_pts = 100,inner_r
         pt_rad = np.random.rand()*(outer_rad-inner_rad)+inner_rad
         sample_pt = [pt,pt_rad]
 
-        if prune_into_eye:
-            if ((pt*pt_rad)[-1] <= 1-lens_depth) \
-                    and (np.linalg.norm(pt*pt_rad - np.array(g_fovea_pos)) \
-                    >= fovea_radius):
-                sample.append(sample_pt)
+        if bounding_box is None:
+            if prune_into_eye:
+                if ((pt*pt_rad)[-1] <= 1-lens_depth) \
+                        and (np.linalg.norm(pt*pt_rad - np.array(g_fovea_pos)) \
+                        >= fovea_radius):
+                    sample.append(sample_pt)
+        else:
+            if prune_into_eye:
+                if ((pt*pt_rad)[-1] <= 1-lens_depth) \
+                        and (np.linalg.norm(pt*pt_rad - np.array(g_fovea_pos)) \
+                        >= fovea_radius) and (isInBox(pt*pt_rad,bounding_box)):
+                    sample.append(sample_pt)
 
     return np.array(sample,dtype=object)
 
@@ -55,6 +62,23 @@ def exp_map(pt, direction):
 
     return np.array([np.cos(dirnorm)*np.array(pt[0]) + np.sin(dirnorm)*np.array(direction[0])/dirnorm,pt[1]+direction[1] ],dtype=object)
 
+def isInInterval(pt, interval):
+    if (pt >= interval[0]) and (pt <= interval[1]):
+        return True
+    else:
+        return False
+
+
+def isInBox(pt, bbox):
+    """
+    pt should be of theform [x,y,z],
+    bbox should be [[xlow,xhigh],[ylow,yhigh],[zlow,zhigh]]
+    """
+    if sum([isInInterval(pt[i],bbox[i]) for i in range(len(pt))]) == 3:
+        return True
+    else:
+        return False
+
 def vascular_growth_sim(fovea_radius = 0.2,lens_depth = 0.5,max_iter = 1000,init_num_pts = 200,inner_rad = 0.7,outer_rad = 1.2,D_step = 0.9,death_dist = None,init_vasc = None,bounding_box=None):
     """
     if init_vasc is None, then initialize pt_list and vascular structure
@@ -77,13 +101,14 @@ def vascular_growth_sim(fovea_radius = 0.2,lens_depth = 0.5,max_iter = 1000,init
         branch_membership = init_vasc[2]
 
         #construct the indicator for whether a point is at the end of a branch
-        # by looping through branches 
+        # by looping through branches
         to_grow_indicator = np.zeros(len(pt_list))
         for b in branches:
             to_grow_indicator[b[-1]] = 1.
 
     #sample auxin
-    sample_auxin = sphere_init_config(fovea_radius = fovea_radius,lens_depth = lens_depth,num_pts = init_num_pts,inner_rad = inner_rad,outer_rad = outer_rad)
+    sample_auxin = sphere_init_config(fovea_radius = fovea_radius,lens_depth = lens_depth,num_pts = init_num_pts,inner_rad = inner_rad,outer_rad = outer_rad,bounding_box = bounding_box)
+
     init_sample = np.array(sample_auxin)
 
     #print("sampled points are: \n");print(sample_auxin)
@@ -130,9 +155,16 @@ def vascular_growth_sim(fovea_radius = 0.2,lens_depth = 0.5,max_iter = 1000,init
                 step_vec = sum([(1./len(nns[i]))*tangent_vector(pt_list[i],sample_auxin[k],normalized = False) for k in nns[i]])
                 vprime = exp_map(pt_list[i], [D_step*step_vec[0],D_step*step_vec[1]])
 
+                #check whether the proposed point is in the bounding box
+                #have a boolean defaulted to true, and then possibly turn to false otherwise
+                in_box_indicator = True
+                if bounding_box is not None:
+                    if not isInBox(vprime[1]*vprime[0],bounding_box):
+                        in_box_indicator = False
+
                 #if the new point is far enough away from the fovea:
-                if np.linalg.norm(vprime[1]*vprime[0] - np.array(g_fovea_pos))\
-                        > fovea_radius:
+                if (np.linalg.norm(vprime[1]*vprime[0] - np.array(g_fovea_pos))\
+                        > fovea_radius) and in_box_indicator:
                     #print("growing from {} to {}".format(pt_list[i],vprime))
                     #add the new point to the list of points
                     pt_list = np.vstack([pt_list,vprime])
