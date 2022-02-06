@@ -128,7 +128,7 @@ class Vasculature:
             src.mlab_source.dataset.lines = proj_e
             lines = mlab.pipeline.stripper(src)
 
-#            import pdb; pdb.set_trace()
+            #import pdb; pdb.set_trace()
             if save:
                 mlab.savefig(f"{self.save_dir}plots/{save_name}_exact-vein_radius-{self.init_radii:.3f}.png", size = (300,300))
                 mlab.close("all")
@@ -193,10 +193,13 @@ class Vasculature:
 
         return
 
-    def save_radii(self,save_name=""):
+    def save_radii(self,save_name="",save_init = False):
 
-        np.save(f"{self.save_dir}plots/{save_name}_radii-vein_radius-{self.init_radii:.3f}",self.radii)
-
+        if save_init:
+            np.save(f"{self.save_dir}plots/{save_name}_radii-vein_radius-{self.init_radii:.3f}",self.radii)
+        else:
+            np.save(f"{self.save_dir}plots/{save_name}_radii",self.radii)
+        
         return
 
     def load_radii(self,init_radii,save_name=""):
