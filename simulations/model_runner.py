@@ -179,8 +179,8 @@ class Vasculature:
 
     def save_simulation(self,save_name = ""):
 
-        np.save( pj(self.save_dir, f"plots/{save_name}_edges") ,self.edges )
-        np.save( pj(self.save_dir, f"plots/{save_name}_coords") ,self.coords )
+        np.save( pj(self.save_dir, f"plots/{save_name}_edges"), self.edges )
+        np.save( pj(self.save_dir, f"plots/{save_name}_coords"), self.coords )
 
         return
 
