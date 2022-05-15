@@ -31,8 +31,13 @@ def main(cfg):
     else:
         raise NotImplementedError(cat)
     img = cv2.imread( pj( cfg["data_supdir"], img_subdir, img_name ) )
-    label_name = stub + "_AVmanual.gif"
-    label = cv2.imread( pj( cfg["analysis_supdir"], "sket", label_name ) )
+    label_stub = stub+"_AVmanual"
+    label_path_stub = pj( cfg["analysis_supdir"], "sket", label_stub )
+    if not pe(label_path_stub+".png"):
+        from PIL import Image
+        label_img = Image.open(label_path_stub+".gif")
+        label_img.write(label_path_stub+".png")
+    label = cv2.imread( label_path_stub+".png", cv2.IMREAD_GRAYSCALE )
     import pdb; pdb.set_trace()
 
     nodes_csv = stub + "_AVmanual_nodes.csv"
@@ -63,8 +68,10 @@ def main(cfg):
 
     output_path = pj(HOME, "Output/retina/plots", img_name)
     cv2.imwrite(output_path, img)
-    label_output_path = pj(HOME, "Output/retina/plots", label_name)
+    print( f"Wrote image to {output_path}" )
+    label_output_path = pj(HOME, "Output/retina/plots", label_stub+".png")
     cv2.imwrite(label_output_path, label)
+    print( f"Wrote label to {label_output_path}" )
     import pdb; pdb.set_trace()
 
 if __name__ == "__main__":

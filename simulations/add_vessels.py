@@ -18,6 +18,9 @@ pe = os.path.exists
 pj = os.path.join
 HOME = os.path.expanduser("~")
 
+"""
+TO DO NEXT: Clip out some part of the retina
+"""
 
 def main(cfg):
     blank = cv2.imread( cfg["blank"] )
@@ -49,7 +52,10 @@ def main(cfg):
 
     alpha = 0.75
     blank = cv2.addWeighted(blank2, alpha, blank, 1-alpha, gamma=0)
-    cv2.imwrite( pj(cfg["vessels_dir"], "syn_ret.png"), blank )
+    out_path = pj(cfg["vessels_dir"], "syn_ret.png")
+    cv2.imwrite( out_path, blank )
+    print( f"Synthetic retina written to {out_path}" )
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
